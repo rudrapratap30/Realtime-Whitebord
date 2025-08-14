@@ -19,7 +19,7 @@ colorPicker.addEventListener("change", (e) => currentColor = e.target.value);
 penSelect.addEventListener("change", (e) => penType = e.target.value);
 textBtn.addEventListener("click", () => textMode = !textMode);
 
-// NEW: Reset button click event
+// Reset button click event
 resetBtn.addEventListener("click", () => {
   socket.emit("reset_board");
   clearCanvas();
@@ -29,7 +29,6 @@ function clearCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// Draw or add text
 function startDraw(e) {
   if (textMode) {
     const text = prompt("Enter your text:");
@@ -45,7 +44,10 @@ function startDraw(e) {
   }
 }
 
-function endDraw() { drawing = false; ctx.beginPath(); }
+function endDraw() {
+  drawing = false;
+  ctx.beginPath();
+}
 
 function draw(e) {
   if (!drawing) return;
@@ -99,7 +101,11 @@ socket.on("init", (dataArray) => {
   });
 });
 
-// NEW: Clear canvas when reset event received
+// Clear canvas when reset event received
 socket.on("reset_board", () => {
   clearCanvas();
 });
+
+canvas.addEventListener("mousedown", startDraw);
+canvas.addEventListener("mouseup", endDraw);
+canvas.addEventListener("mousemove", draw);

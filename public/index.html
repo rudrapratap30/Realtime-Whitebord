@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Collaborative Whiteboard</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/style.css"> <!-- FIXED PATH -->
 </head>
 <body>
   <div id="toolbar">
@@ -14,12 +14,12 @@
       <option value="highlighter">Highlighter</option>
     </select>
     <button id="textBtn">Text</button>
-    <button id="resetBtn">Reset</button> <!-- NEW BUTTON -->
+    <button id="resetBtn">Reset</button> <!-- NEW -->
   </div>
 
   <canvas id="board"></canvas>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
+  <script src="/script.js"></script> <!-- FIXED PATH -->
 </body>
 </html>

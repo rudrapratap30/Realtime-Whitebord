@@ -1,12 +1,14 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static("public"));
+// Serve static files correctly from /public
+app.use(express.static(path.join(__dirname, "public")));
 
 let strokes = [];
 
@@ -26,10 +28,10 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("text_add", data);
   });
 
-  // NEW: Reset board event
+  // Reset board event
   socket.on("reset_board", () => {
-    strokes = []; // clear saved strokes
-    io.emit("reset_board"); // tell all clients to clear
+    strokes = [];
+    io.emit("reset_board");
   });
 
   socket.on("disconnect", () => {
