@@ -1,15 +1,13 @@
-const express = require("express");      // 1. Import Express first
-const http = require("http");            // 2. Import HTTP module
-const { Server } = require("socket.io"); // 3. Import Socket.IO
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
-const app = express();                   // 4. Initialize app
-const server = http.createServer(app);   // 5. Create HTTP server
-const io = new Server(server);           // 6. Attach Socket.IO
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-// Serve static files from 'public' folder
 app.use(express.static("public"));
 
-// Store strokes for new users
 let strokes = [];
 
 io.on("connection", (socket) => {
@@ -18,16 +16,20 @@ io.on("connection", (socket) => {
   // Send existing strokes to new user
   socket.emit("init", strokes);
 
-  // Relay drawing events
   socket.on("draw", (data) => {
     strokes.push(data);
     socket.broadcast.emit("draw", data);
   });
 
-  // Relay text events
   socket.on("text_add", (data) => {
     strokes.push(data);
     socket.broadcast.emit("text_add", data);
+  });
+
+  // NEW: Reset board event
+  socket.on("reset_board", () => {
+    strokes = []; // clear saved strokes
+    io.emit("reset_board"); // tell all clients to clear
   });
 
   socket.on("disconnect", () => {
@@ -37,4 +39,3 @@ io.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-

@@ -13,20 +13,31 @@ let textMode = false;
 const colorPicker = document.getElementById("colorPicker");
 const penSelect = document.getElementById("penType");
 const textBtn = document.getElementById("textBtn");
+const resetBtn = document.getElementById("resetBtn");
 
 colorPicker.addEventListener("change", (e) => currentColor = e.target.value);
 penSelect.addEventListener("change", (e) => penType = e.target.value);
 textBtn.addEventListener("click", () => textMode = !textMode);
 
+// NEW: Reset button click event
+resetBtn.addEventListener("click", () => {
+  socket.emit("reset_board");
+  clearCanvas();
+});
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
 // Draw or add text
 function startDraw(e) {
-  if(textMode) {
+  if (textMode) {
     const text = prompt("Enter your text:");
-    if(text){
+    if (text) {
       ctx.fillStyle = currentColor;
       ctx.font = "20px Arial";
       ctx.fillText(text, e.clientX, e.clientY);
-      socket.emit("text_add", {x: e.clientX, y: e.clientY, text, color: currentColor});
+      socket.emit("text_add", { x: e.clientX, y: e.clientY, text, color: currentColor });
     }
   } else {
     drawing = true;
@@ -37,7 +48,7 @@ function startDraw(e) {
 function endDraw() { drawing = false; ctx.beginPath(); }
 
 function draw(e) {
-  if(!drawing) return;
+  if (!drawing) return;
   ctx.lineWidth = penType === "brush" ? 5 : penType === "highlighter" ? 15 : 2;
   ctx.strokeStyle = penType === "highlighter" ? `${currentColor}55` : currentColor;
   ctx.lineCap = "round";
@@ -47,7 +58,7 @@ function draw(e) {
   ctx.beginPath();
   ctx.moveTo(e.clientX, e.clientY);
 
-  socket.emit("draw", {x: e.clientX, y: e.clientY, color: currentColor, penType});
+  socket.emit("draw", { x: e.clientX, y: e.clientY, color: currentColor, penType });
 }
 
 // Receive strokes from other users
@@ -72,7 +83,7 @@ socket.on("text_add", (data) => {
 // Initialize with previous strokes
 socket.on("init", (dataArray) => {
   dataArray.forEach(data => {
-    if(data.text){
+    if (data.text) {
       ctx.fillStyle = data.color;
       ctx.font = "20px Arial";
       ctx.fillText(data.text, data.x, data.y);
@@ -88,6 +99,7 @@ socket.on("init", (dataArray) => {
   });
 });
 
-canvas.addEventListener("mousedown", startDraw);
-canvas.addEventListener("mouseup", endDraw);
-canvas.addEventListener("mousemove", draw);
+// NEW: Clear canvas when reset event received
+socket.on("reset_board", () => {
+  clearCanvas();
+});
