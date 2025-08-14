@@ -29,14 +29,23 @@ function clearCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+function getXY(e) {
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  } else {
+    return { x: e.clientX, y: e.clientY };
+  }
+}
+
 function startDraw(e) {
+  const { x, y } = getXY(e);
   if (textMode) {
     const text = prompt("Enter your text:");
     if (text) {
       ctx.fillStyle = currentColor;
       ctx.font = "20px Arial";
-      ctx.fillText(text, e.clientX, e.clientY);
-      socket.emit("text_add", { x: e.clientX, y: e.clientY, text, color: currentColor });
+      ctx.fillText(text, x, y);
+      socket.emit("text_add", { x, y, text, color: currentColor });
     }
   } else {
     drawing = true;
@@ -50,20 +59,22 @@ function endDraw() {
 }
 
 function draw(e) {
+  e.preventDefault(); // stop scrolling while drawing on mobile
   if (!drawing) return;
+  const { x, y } = getXY(e);
   ctx.lineWidth = penType === "brush" ? 5 : penType === "highlighter" ? 15 : 2;
   ctx.strokeStyle = penType === "highlighter" ? `${currentColor}55` : currentColor;
   ctx.lineCap = "round";
 
-  ctx.lineTo(e.clientX, e.clientY);
+  ctx.lineTo(x, y);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(e.clientX, e.clientY);
+  ctx.moveTo(x, y);
 
-  socket.emit("draw", { x: e.clientX, y: e.clientY, color: currentColor, penType });
+  socket.emit("draw", { x, y, color: currentColor, penType });
 }
 
-// Receive strokes from other users
+// Receive strokes from others
 socket.on("draw", (data) => {
   ctx.lineWidth = data.penType === "brush" ? 5 : data.penType === "highlighter" ? 15 : 2;
   ctx.strokeStyle = data.penType === "highlighter" ? `${data.color}55` : data.color;
@@ -106,6 +117,12 @@ socket.on("reset_board", () => {
   clearCanvas();
 });
 
+// Mouse events
 canvas.addEventListener("mousedown", startDraw);
 canvas.addEventListener("mouseup", endDraw);
 canvas.addEventListener("mousemove", draw);
+
+// Touch events for mobile
+canvas.addEventListener("touchstart", startDraw);
+canvas.addEventListener("touchend", endDraw);
+canvas.addEventListener("touchmove", draw);
